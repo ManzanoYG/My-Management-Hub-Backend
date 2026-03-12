@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyManagmentHub_API", "MyManagmentHub_API\MyManagmentHub_API.csproj", "{E2053952-52BC-477B-B097-C9854F788E07}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyManagementHub_API", "MyManagmentHub_API\MyManagementHub_API.csproj", "{E2053952-52BC-477B-B097-C9854F788E07}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E04A66DA-8456-4DF8-B204-9F8387016BC9} = {E04A66DA-8456-4DF8-B204-9F8387016BC9}
 	EndProjectSection
