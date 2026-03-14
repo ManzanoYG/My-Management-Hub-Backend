@@ -6,6 +6,7 @@ using Infrastructure.Ef.Authentication;
 using Infrastructure.Ef.User;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -84,6 +85,15 @@ builder.Services.AddLogging(b =>
 
 //SignalR
 builder.Services.AddSignalR();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("api", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 100;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+    });
+});
 
 var app = builder.Build();
 
