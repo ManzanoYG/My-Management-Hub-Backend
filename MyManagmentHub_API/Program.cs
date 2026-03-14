@@ -2,6 +2,7 @@ using Application;
 using Application.UseCases.Authentication;
 using Application.UseCases.User;
 using Infrastructure;
+using Infrastructure.Ef.AuditLog;
 using Infrastructure.Ef.Authentication;
 using Infrastructure.Ef.User;
 using Infrastructure.Services;
@@ -9,9 +10,34 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MyManagementHub_API.Middleware;
+using Serilog;
+using Serilog.Events;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, configuration) =>
+    configuration
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+        .MinimumLevel.Override("System", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(
+            outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
+        .WriteTo.File(
+            path: "logs/ManagementHub-.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 30,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
+        .WriteTo.File(
+            path: "logs/ManagementHub-errors-.log",
+            rollingInterval: RollingInterval.Day,
+            restrictedToMinimumLevel: LogEventLevel.Warning,
+            retainedFileCountLimit: 30,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
+);
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -29,6 +55,11 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
+
+//Audit logging
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 //User
 builder.Services.AddScoped<UseCaseCreateUser>();
@@ -76,13 +107,6 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-// Initialize Loggers
-builder.Services.AddLogging(b =>
-{
-    b.AddConsole();
-    b.AddDebug();
-});
-
 //SignalR
 builder.Services.AddSignalR();
 
@@ -106,6 +130,9 @@ if (app.Environment.IsDevelopment())
         options.DocumentPath = "/openapi/v1.json";
     });
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.Use(async (context, next) =>
 {
