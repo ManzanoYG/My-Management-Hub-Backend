@@ -19,9 +19,4 @@
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="UseCases\Authentication\Dtos\" />
-    <Folder Include="UseCases\Authentication\" />
-  </ItemGroup>
-
 </Project>
