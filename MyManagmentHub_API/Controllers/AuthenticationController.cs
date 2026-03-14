@@ -15,17 +15,20 @@ namespace MyManagementHub_API.Controllers
         private readonly TokenService _tokenService;
         private readonly IRefreshTokenStore _refreshTokenStore;
         private readonly UseCaseLogin _useCaseLogin;
+        private readonly IAuditService _auditService;
 
         public AuthenticationController(
             IConfiguration configuration,
             TokenService tokenService,
             IRefreshTokenStore refreshTokenStore,
-            UseCaseLogin useCaseLogin)
+            UseCaseLogin useCaseLogin,
+            IAuditService auditService)
         {
             _configuration = configuration;
             _tokenService = tokenService;
             _refreshTokenStore = refreshTokenStore;
             _useCaseLogin = useCaseLogin;
+            _auditService = auditService;
         }
 
         [HttpPost("login")]
@@ -113,6 +116,7 @@ namespace MyManagementHub_API.Controllers
                 SetAccessTokenCookie(newAccessToken);
                 SetRefreshTokenCookie(newRefreshToken);
 
+                _auditService.Log(username, AuditActions.TokenRefreshed, AuditEntities.Session);
                 return Ok(new { message = "Token refreshed" });
             }
             catch (Exception)
@@ -166,6 +170,7 @@ namespace MyManagementHub_API.Controllers
             if (!string.IsNullOrWhiteSpace(username))
             {
                 _refreshTokenStore.Revoke(username);
+                _auditService.Log(username, AuditActions.UserLogout, AuditEntities.Session);
             }
 
             DeleteAuthCookies();

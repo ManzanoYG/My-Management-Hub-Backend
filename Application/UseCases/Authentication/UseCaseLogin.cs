@@ -1,6 +1,7 @@
 ﻿using Application.UseCases.Authentication.Dtos;
 using AutoMapper;
 using Infrastructure.Ef.User;
+using Infrastructure.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +14,13 @@ namespace Application.UseCases.Authentication
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IAuditService _auditService;
 
-        public UseCaseLogin(IUserRepository userRepository, IMapper mapper)
+        public UseCaseLogin(IUserRepository userRepository, IMapper mapper, IAuditService auditService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _auditService = auditService;
         }
 
         public DtoOutputUserLogin Execute(DtoInputLogin login)
@@ -29,6 +32,7 @@ namespace Application.UseCases.Authentication
             }
             catch (KeyNotFoundException)
             {
+                _auditService.Log(login.UserName, AuditActions.UserLoginFailed, AuditEntities.User);
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
@@ -36,9 +40,11 @@ namespace Application.UseCases.Authentication
 
             if (!valid)
             {
+                _auditService.Log(login.UserName, AuditActions.UserLoginFailed, AuditEntities.User);
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
 
+            _auditService.Log(login.UserName, AuditActions.UserLogin, AuditEntities.Session);
             return _mapper.Map<DtoOutputUserLogin>(user);
         }
     }
