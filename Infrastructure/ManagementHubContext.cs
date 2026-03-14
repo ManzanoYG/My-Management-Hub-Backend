@@ -14,6 +14,7 @@ namespace Infrastructure
         public ManagementHubContext(DbContextOptions options) : base(options) { }
 
         public DbSet<DbUser> Users { get; set; }
+        public DbSet<DbAuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +28,18 @@ namespace Infrastructure
                 entity.Property(u => u.Updated_at).HasColumnName("updated_at");
                 entity.Property(u => u.IsBanned).HasColumnName("isBanned");
                 entity.Property(u => u.UserType).HasColumnName("userType");
+            });
+
+            modelBuilder.Entity<DbAuditLog>(entity =>
+            {
+                entity.ToTable("audit_logs");
+                entity.HasKey(a => a.Id);
+                entity.Property(a => a.Id).HasColumnName("Id").ValueGeneratedOnAdd();
+                entity.Property(a => a.Username).HasColumnName("Username").HasMaxLength(255).IsRequired(false);
+                entity.Property(a => a.Action).HasColumnName("Action").HasMaxLength(200).IsRequired();
+                entity.Property(a => a.Entity).HasColumnName("Entity").HasMaxLength(100).IsRequired();
+                entity.Property(a => a.CreatedAt).HasColumnName("CreatedAt").IsRequired();
+                entity.Property(a => a.IpAddress).HasColumnName("IpAddress").HasMaxLength(50).IsRequired(false);
             });
         }
     }
