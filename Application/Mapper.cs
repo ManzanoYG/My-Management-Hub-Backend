@@ -1,4 +1,5 @@
 ﻿using Application.UseCases.User.Dto;
+using Application.UseCases.Authentication.Dtos;
 using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Ef.DbEntities;
@@ -18,6 +19,7 @@ namespace Application
             CreateMap<User, DtoOutputUser>();
             CreateMap<DbUser, DtoOutputUser>();
             CreateMap<DbUser, User>();
+            CreateMap<DbUser, DtoOutputUserLogin>().ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Username));
         }
     }
 }
