@@ -1,17 +1,16 @@
 using Application;
+using Application.UseCases.Authentication;
 using Application.UseCases.User;
 using Infrastructure;
 using Infrastructure.Ef.Authentication;
 using Infrastructure.Ef.User;
+using Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Read Config Files
-var configs = new ConfigurationBuilder()
-    .SetBasePath(builder.Environment.ContentRootPath)
-    .AddJsonFile("appsettings.Development.json")
-    .Build();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -27,10 +26,54 @@ builder.Services.AddDbContext<ManagementHubContext>(m => m.UseSqlServer(
 //Repository
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<PasswordHasher>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
 
 //User
 builder.Services.AddScoped<UseCaseCreateUser>();
 builder.Services.AddScoped<UseCaseFetchUserByUsername>();
+
+//Authentication
+builder.Services.AddScoped<UseCaseLogin>();
+
+var jwtSecretKey = builder.Configuration["JwtSettings:SecretKey"]
+    ?? throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
+var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
+var jwtAudience = builder.Configuration["JwtSettings:Audience"];
+var accessTokenCookieName = builder.Configuration["JwtSettings:AccessTokenCookieName"] ?? "ManagementHubAccessToken";
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrWhiteSpace(context.Token) &&
+                    context.Request.Cookies.TryGetValue(accessTokenCookieName, out var cookieToken))
+                {
+                    context.Token = cookieToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Initialize Loggers
 builder.Services.AddLogging(b =>
@@ -57,6 +100,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
