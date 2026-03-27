@@ -19,7 +19,7 @@ namespace Application
             CreateMap<User, DtoOutputUser>();
             CreateMap<DbUser, DtoOutputUser>();
             CreateMap<DbUser, User>();
-            CreateMap<DbUser, DtoOutputUserLogin>().ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Username));
+            CreateMap<bool, DtoOutputUserLogin>();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Application.UseCases.Authentication.Dtos
 {
     public class DtoInputLogin
     {
-        [Required] public string UserName { get; set; }
-        [Required] public string Password { get; set; }
+        [Required] public string username { get; set; }
+        [Required] public string password { get; set; }
     }
 }

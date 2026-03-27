@@ -11,9 +11,12 @@ namespace Infrastructure.Ef.User
     public class UserRepository : IUserRepository
     {
         private readonly ManagementHubContext _context;
+        private readonly IPasswordHasher _passwordHasher;
 
-        public UserRepository(ManagementHubContext context) { 
+        public UserRepository(ManagementHubContext context, IPasswordHasher passwordHasher)
+        {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         public DbUser Create(string username, string password)
@@ -21,7 +24,7 @@ namespace Infrastructure.Ef.User
             var user = new DbUser
             {
                 Username = username,
-                Password = PasswordHasher.HashPassword(password),
+                Password = _passwordHasher.HashPassword(password),
                 Created_at = DateTime.UtcNow.AddHours(1.0),
                 Updated_at = DateTime.UtcNow.AddHours(1.0),
                 IsBanned = false

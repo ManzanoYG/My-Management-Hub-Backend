@@ -1,12 +1,9 @@
 ﻿using Application.UseCases.Authentication.Dtos;
 using AutoMapper;
+using Infrastructure.Ef.Authentication;
+using Infrastructure.Ef.DbEntities;
 using Infrastructure.Ef.User;
 using Infrastructure.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.UseCases.Authentication
 {
@@ -14,38 +11,49 @@ namespace Application.UseCases.Authentication
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IPasswordHasher _passwordHasher;
         private readonly IAuditService _auditService;
 
-        public UseCaseLogin(IUserRepository userRepository, IMapper mapper, IAuditService auditService)
+        public UseCaseLogin(IUserRepository userRepository, IMapper mapper, IAuditService auditService, IPasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _auditService = auditService;
+            _passwordHasher = passwordHasher;
         }
 
         public DtoOutputUserLogin Execute(DtoInputLogin login)
         {
-            Infrastructure.Ef.DbEntities.DbUser user;
-            try
+            
+            var user = _userRepository.FetchByUsername(login.username);
+            if (user == null || string.IsNullOrEmpty(login.password))
             {
-                user = _userRepository.FetchByUsername(login.UserName);
-            }
-            catch (KeyNotFoundException)
-            {
-                _auditService.Log(login.UserName, AuditActions.UserLoginFailed, AuditEntities.User);
+                _auditService.Log(login.username, AuditActions.UserLoginFailed, AuditEntities.User);
+                return new DtoOutputUserLogin { isLogged = false };
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
-
-            bool valid = BCrypt.Net.BCrypt.Verify(login.Password, user.Password);
-
-            if (!valid)
+            else
             {
-                _auditService.Log(login.UserName, AuditActions.UserLoginFailed, AuditEntities.User);
-                throw new UnauthorizedAccessException("Invalid credentials");
-            }
+                bool valid = BCrypt.Net.BCrypt.Verify(login.password, user.Password);
+                Console.WriteLine(login.password);
+                Console.WriteLine(user.Password);
+                if (!valid)
+                {
+                    _auditService.Log(login.username, AuditActions.UserLoginFailed, AuditEntities.User);
+                    throw new UnauthorizedAccessException("Invalid credentials");
+                }
+                else
+                {
+                    _auditService.Log(login.username, AuditActions.UserLogin, AuditEntities.Session);
+                }
 
-            _auditService.Log(login.UserName, AuditActions.UserLogin, AuditEntities.Session);
-            return _mapper.Map<DtoOutputUserLogin>(user);
+            }
+             return _mapper.Map<DtoOutputUserLogin>(new DtoOutputUserLogin
+             {
+                 isLogged = _passwordHasher.VerifyPassword(user.Password, login.password),
+                 username = user.Username,
+                 usertype = user.UserType
+             });
         }
     }
 }

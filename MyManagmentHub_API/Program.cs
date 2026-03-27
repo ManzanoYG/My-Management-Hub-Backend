@@ -43,6 +43,8 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoMapper(typeof(Mapper));
 
@@ -52,7 +54,7 @@ builder.Services.AddDbContext<ManagementHubContext>(m => m.UseSqlServer(
 
 //Repository
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<PasswordHasher>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
 
@@ -65,47 +67,36 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<UseCaseCreateUser>();
 builder.Services.AddScoped<UseCaseFetchUserByUsername>();
 
-//Authentication
+//JWT configuration
 builder.Services.AddScoped<UseCaseLogin>();
+builder.Services.AddAuthorization();
 
-var jwtSecretKey = builder.Configuration["JwtSettings:SecretKey"]
-    ?? throw new InvalidOperationException("JwtSettings:SecretKey is missing in configuration.");
-var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
-var jwtAudience = builder.Configuration["JwtSettings:Audience"];
-var accessTokenCookieName = builder.Configuration["JwtSettings:AccessTokenCookieName"] ?? "ManagementHubAccessToken";
+//JWT configuration
+var jwtKey = builder.Configuration.GetSection("JwtSettings:SecretKey").Get<string>();
 
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
             ValidateIssuer = true,
-            ValidIssuer = jwtIssuer,
             ValidateAudience = true,
-            ValidAudience = jwtAudience,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
-
         options.Events = new JwtBearerEvents
         {
-            OnMessageReceived = context =>
-            {
-                if (string.IsNullOrWhiteSpace(context.Token) &&
-                    context.Request.Cookies.TryGetValue(accessTokenCookieName, out var cookieToken))
-                {
-                    context.Token = cookieToken;
-                }
-
+            OnTokenValidated = context => {
+                return Task.CompletedTask;
+            },
+            OnMessageReceived = context => {
+                context.Token = context.Request.Cookies["ManagementHubSession"];
                 return Task.CompletedTask;
             }
         };
     });
-
-builder.Services.AddAuthorization();
 
 //SignalR
 builder.Services.AddSignalR();
@@ -119,12 +110,28 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+builder.Services.AddCors(options => {
+    options.AddPolicy("Dev", policyBuilder =>
+        policyBuilder.WithOrigins("http://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
+
+// Initialize Loggers
+builder.Services.AddLogging(b =>
+{
+    b.AddConsole();
+    b.AddDebug();
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
     app.UseSwaggerUi(options =>
     {
         options.DocumentPath = "/openapi/v1.json";
@@ -145,6 +152,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseCors("Dev");
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseRateLimiter();

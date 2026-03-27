@@ -9,7 +9,8 @@ namespace Application.UseCases.Authentication.Dtos
 {
     public class DtoOutputUserLogin
     {
-        public string UserName { get; set; }
-        public byte UserType { get; set; }
+        public bool isLogged { get; set; }
+        public string username { get; set; }
+        public byte usertype { get; set; }
     }
 }
