@@ -6,16 +6,21 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Ef.Authentication
 {
-    public class PasswordHasher
+    public class PasswordHasher : IPasswordHasher
     {
-        public static string HashPassword(string password)
+        private const int Cost = 12;
+        public string HashPassword(string password)
         {
-            return BCrypt.Net.BCrypt.HashPassword(password);
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: Cost);
         }
 
-        public static bool VerifyPassword(string password, string hashedPassword)
+        public bool VerifyPassword(string password, string hashedPassword)
         {
-            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+            Console.WriteLine(password);
+            Console.WriteLine(hashedPassword);
+
+            if (string.IsNullOrWhiteSpace(hashedPassword) || string.IsNullOrWhiteSpace(password)) return false;
+            return BCrypt.Net.BCrypt.Verify(hashedPassword, password);
         }
     }
 }
