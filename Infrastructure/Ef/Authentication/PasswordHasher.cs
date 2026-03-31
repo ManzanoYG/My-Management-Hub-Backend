@@ -14,13 +14,10 @@ namespace Infrastructure.Ef.Authentication
             return BCrypt.Net.BCrypt.HashPassword(password, workFactor: Cost);
         }
 
-        public bool VerifyPassword(string password, string hashedPassword)
+        public bool VerifyPassword(string hashedPassword, string password)
         {
-            Console.WriteLine(password);
-            Console.WriteLine(hashedPassword);
-
             if (string.IsNullOrWhiteSpace(hashedPassword) || string.IsNullOrWhiteSpace(password)) return false;
-            return BCrypt.Net.BCrypt.Verify(hashedPassword, password);
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
     }
 }

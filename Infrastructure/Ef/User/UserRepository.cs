@@ -19,6 +19,22 @@ namespace Infrastructure.Ef.User
             _passwordHasher = passwordHasher;
         }
 
+        public bool ChangePassword(string username, string oldPassword, string newPassword)
+        {
+            var userToUpdate = _context.Users.FirstOrDefault(u => u.Username == username);
+            if (userToUpdate == null) throw new KeyNotFoundException($"User with username {username} has not benn found");
+
+            if (!_passwordHasher.VerifyPassword(userToUpdate.Password, oldPassword))
+            {
+                return false;
+            } else
+            {
+                userToUpdate.Password = _passwordHasher.HashPassword(newPassword);
+                _context.SaveChanges();
+            }
+            return true;
+        }
+
         public DbUser Create(string username, string password)
         {
             var user = new DbUser

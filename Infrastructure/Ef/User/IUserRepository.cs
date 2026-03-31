@@ -11,5 +11,6 @@ namespace Infrastructure.Ef.User
     {
         DbUser Create(string username, string password);
         DbUser FetchByUsername(string username);
+        bool ChangePassword(string username ,string oldPassword, string newPassword);
     }
 }

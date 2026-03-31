@@ -66,6 +66,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 //User
 builder.Services.AddScoped<UseCaseCreateUser>();
 builder.Services.AddScoped<UseCaseFetchUserByUsername>();
+builder.Services.AddScoped<UseCaseChangePassword>();
 
 //JWT configuration
 builder.Services.AddScoped<UseCaseLogin>();

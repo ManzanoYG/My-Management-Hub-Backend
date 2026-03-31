@@ -10,11 +10,13 @@ namespace MyManagementHub_API.Controllers
     {
         private readonly UseCaseCreateUser _useCaseCreateUser;
         private readonly UseCaseFetchUserByUsername _useCaseFetchUserByUsername;
+        private readonly UseCaseChangePassword _useCaseChangePassword;
 
-        public UserController(UseCaseCreateUser useCaseCreateUser, UseCaseFetchUserByUsername useCaseFetchUserByUsername)
+        public UserController(UseCaseCreateUser useCaseCreateUser, UseCaseFetchUserByUsername useCaseFetchUserByUsername, UseCaseChangePassword useCaseChangePassword)
         {
             _useCaseCreateUser = useCaseCreateUser;
             _useCaseFetchUserByUsername = useCaseFetchUserByUsername;
+            _useCaseChangePassword = useCaseChangePassword;
         }
 
         [HttpPost]
@@ -46,6 +48,20 @@ namespace MyManagementHub_API.Controllers
                     e.Message
                 });
             }
+        }
+
+        [HttpPut]
+        [Route("changePassword")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult ChangePassword([FromBody] DtoInputChangePassword changePassword)
+        {
+            var output = _useCaseChangePassword.Execute(changePassword);
+            return CreatedAtAction(
+                nameof(FetchByUsername),
+                new {username = output},
+                output
+                );
         }
 
     }
