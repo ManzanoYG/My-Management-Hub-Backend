@@ -30,6 +30,7 @@ namespace Infrastructure.Ef.User
             } else
             {
                 userToUpdate.Password = _passwordHasher.HashPassword(newPassword);
+                userToUpdate.Updated_at = DateTime.UtcNow.AddHours(2.0);
                 _context.SaveChanges();
             }
             return true;
@@ -41,13 +42,24 @@ namespace Infrastructure.Ef.User
             {
                 Username = username,
                 Password = _passwordHasher.HashPassword(password),
-                Created_at = DateTime.UtcNow.AddHours(1.0),
-                Updated_at = DateTime.UtcNow.AddHours(1.0),
+                Created_at = DateTime.UtcNow.AddHours(2.0),
+                Updated_at = DateTime.UtcNow.AddHours(2.0),
                 IsBanned = false
             };
             _context.Users.Add(user);
             _context.SaveChanges();
             return user;
+        }
+
+        public bool Delete(string username)
+        {
+            var userToDelete = _context.Users.FirstOrDefault(u => u.Username == username);
+            Console.WriteLine(username);
+            if(userToDelete == null) throw new KeyNotFoundException($"User with id {username} has not been found");
+
+            _context.Users.Remove(userToDelete);
+            _context.SaveChanges();
+            return true;
         }
 
         public DbUser FetchByUsername(string username)
