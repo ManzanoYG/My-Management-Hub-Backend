@@ -21,6 +21,7 @@ namespace Application
             CreateMap<DbUser, User>();
             CreateMap<bool, DtoOutputUserLogin>();
             CreateMap<bool, DtoOutputChangePassword>();
+            CreateMap<bool, DtoOutputDeleteUser>();
         }
     }
 }
