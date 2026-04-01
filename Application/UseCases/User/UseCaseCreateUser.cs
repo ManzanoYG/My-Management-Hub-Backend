@@ -26,7 +26,7 @@ namespace Application.UseCases.User
 
         public DtoOutputUser Execute(DtoInputCreateUser input)
         {
-            var dbUser = _userRepository.Create(input.UserName, input.Password);
+            var dbUser = _userRepository.Create(input.UserName, input.Password, input.TimeZone);
             _auditService.Log(input.UserName, AuditActions.UserCreated, AuditEntities.User);
             return _mapper.Map<DtoOutputUser>(dbUser);
         }

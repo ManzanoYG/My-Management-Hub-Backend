@@ -10,6 +10,7 @@ namespace Infrastructure.Ef.DbEntities
     {
         public string Username { get; set; }
         public string Password { get; set; }
+        public string TimeZone { get; set; }
         public DateTime Created_at { get; set; }
         public DateTime Updated_at { get;set; }
         public bool IsBanned { get; set; }

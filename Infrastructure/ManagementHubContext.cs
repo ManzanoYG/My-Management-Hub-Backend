@@ -24,6 +24,7 @@ namespace Infrastructure
                 entity.HasKey(u => u.Username);
                 entity.Property(u => u.Username).HasColumnName("username");
                 entity.Property(u => u.Password).HasColumnName("password");
+                entity.Property(u => u.TimeZone).HasColumnName("timeZone");
                 entity.Property(u => u.Created_at).HasColumnName("created_at");
                 entity.Property(u => u.Updated_at).HasColumnName("updated_at");
                 entity.Property(u => u.IsBanned).HasColumnName("isBanned");

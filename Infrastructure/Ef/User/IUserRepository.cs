@@ -9,7 +9,7 @@ namespace Infrastructure.Ef.User
 {
     public interface IUserRepository
     {
-        DbUser Create(string username, string password);
+        DbUser Create(string username, string password, string timeZone);
         DbUser FetchByUsername(string username);
         bool ChangePassword(string username ,string oldPassword, string newPassword);
         bool Delete(string username);

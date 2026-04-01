@@ -30,20 +30,21 @@ namespace Infrastructure.Ef.User
             } else
             {
                 userToUpdate.Password = _passwordHasher.HashPassword(newPassword);
-                userToUpdate.Updated_at = DateTime.UtcNow.AddHours(2.0);
+                userToUpdate.Updated_at = DateTime.UtcNow;
                 _context.SaveChanges();
             }
             return true;
         }
 
-        public DbUser Create(string username, string password)
+        public DbUser Create(string username, string password, string timeZone)
         {
             var user = new DbUser
             {
                 Username = username,
                 Password = _passwordHasher.HashPassword(password),
-                Created_at = DateTime.UtcNow.AddHours(2.0),
-                Updated_at = DateTime.UtcNow.AddHours(2.0),
+                TimeZone = timeZone,
+                Created_at = DateTime.UtcNow,
+                Updated_at = DateTime.UtcNow,
                 IsBanned = false
             };
             _context.Users.Add(user);
@@ -54,7 +55,6 @@ namespace Infrastructure.Ef.User
         public bool Delete(string username)
         {
             var userToDelete = _context.Users.FirstOrDefault(u => u.Username == username);
-            Console.WriteLine(username);
             if(userToDelete == null) throw new KeyNotFoundException($"User with id {username} has not been found");
 
             _context.Users.Remove(userToDelete);

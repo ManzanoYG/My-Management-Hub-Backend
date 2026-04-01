@@ -23,7 +23,6 @@ namespace Application.UseCases.User
 
         public DtoOutputDeleteUser Execute(DtoInputDeleteUser input)
         {
-            Console.WriteLine(input.Username);
             var dbUser = _userRepository.Delete(input.Username);
             return _mapper.Map<DtoOutputDeleteUser>(new DtoOutputDeleteUser
             {

@@ -35,8 +35,6 @@ namespace Application.UseCases.Authentication
             else
             {
                 bool valid = BCrypt.Net.BCrypt.Verify(login.password, user.Password);
-                Console.WriteLine(login.password);
-                Console.WriteLine(user.Password);
                 if (!valid)
                 {
                     _auditService.Log(login.username, AuditActions.UserLoginFailed, AuditEntities.User);
