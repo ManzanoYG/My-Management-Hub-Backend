@@ -49,6 +49,7 @@ namespace Application.UseCases.Authentication
              return _mapper.Map<DtoOutputUserLogin>(new DtoOutputUserLogin
              {
                  isLogged = _passwordHasher.VerifyPassword(user.Password, login.password),
+                 userId = user.Id,
                  username = user.Username,
                  usertype = user.UserType
              });

@@ -8,7 +8,7 @@ namespace Infrastructure.Services.dto
 {
     public class DtoInputToken
     {
-        public string username { get; set; }
+        public Guid userID { get; set; }
         public string userType { get; set; }
     }
 }

@@ -40,7 +40,7 @@ namespace MyManagementHub_API.Controllers
                 var authResult = _useCaseLogin.Execute(login);
                 if (!authResult.isLogged) return BadRequest("Wrong credentials");
                 return Ok(GenerateAndSetToken(new DtoInputToken
-                { username = authResult.username, userType = authResult.usertype.ToString() }));
+                { userID = authResult.userId, userType = authResult.usertype.ToString() }));
             }
             catch (KeyNotFoundException e)
             {
@@ -105,11 +105,11 @@ namespace MyManagementHub_API.Controllers
             var jwt = handler.ReadJwtToken(token);
 
             var role = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value ?? jwt.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value;
-            var username = jwt.Claims.FirstOrDefault(c => c.Type == "username")?.Value ?? jwt.Claims.FirstOrDefault(c => c.Type.Contains("username"))?.Value;
+            var userID = jwt.Claims.FirstOrDefault(c => c.Type == "userID")?.Value ?? jwt.Claims.FirstOrDefault(c => c.Type.Contains("userID"))?.Value;
 
             return Ok(new
             {
-                username = username,
+                userID = userID,
                 role = role
             });
         }

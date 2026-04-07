@@ -13,9 +13,9 @@ namespace Infrastructure.Services
         public string BuildToken(string key, string issuer, DtoInputToken token)
         {
             var claims = new[] {
-            new Claim("username", token.username),
+            new Claim("userID", token.userID.ToString()),
             new Claim("role", token.userType.ToString()),
-            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+            new Claim(ClaimTypes.NameIdentifier, token.userID.ToString())
         };
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));

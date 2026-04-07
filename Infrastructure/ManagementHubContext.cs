@@ -21,14 +21,16 @@ namespace Infrastructure
             modelBuilder.Entity<DbUser>(entity =>
             {
                 entity.ToTable("users");
-                entity.HasKey(u => u.Username);
+                entity.HasKey(u => u.Id);
+                entity.Property(u => u.Id).HasColumnName("id").HasDefaultValueSql("NEWID()");
+                entity.HasIndex(u => u.Username).IsUnique();
                 entity.Property(u => u.Username).HasColumnName("username");
                 entity.Property(u => u.Password).HasColumnName("password");
                 entity.Property(u => u.TimeZone).HasColumnName("timeZone");
                 entity.Property(u => u.Created_at).HasColumnName("created_at");
                 entity.Property(u => u.Updated_at).HasColumnName("updated_at");
-                entity.Property(u => u.IsBanned).HasColumnName("isBanned");
-                entity.Property(u => u.UserType).HasColumnName("userType");
+                entity.Property(u => u.IsBanned).HasColumnName("isBanned").HasDefaultValue(false);
+                entity.Property(u => u.UserType).HasColumnName("userType").HasDefaultValue(0);
             });
 
             modelBuilder.Entity<DbAuditLog>(entity =>
