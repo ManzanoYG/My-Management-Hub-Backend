@@ -15,6 +15,7 @@ namespace Infrastructure
 
         public DbSet<DbUser> Users { get; set; }
         public DbSet<DbAuditLog> AuditLogs { get; set; }
+        public DbSet<DbNote> Notes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +44,26 @@ namespace Infrastructure
                 entity.Property(a => a.Entity).HasColumnName("Entity").HasMaxLength(100).IsRequired();
                 entity.Property(a => a.CreatedAt).HasColumnName("CreatedAt").IsRequired();
                 entity.Property(a => a.IpAddress).HasColumnName("IpAddress").HasMaxLength(50).IsRequired(false);
+            });
+
+            modelBuilder.Entity<DbNote>(entity =>
+            {
+                entity.ToTable("notes");
+                entity.HasKey(u => u.Id);
+                entity.Property(u => u.Id).HasColumnName("Id").HasDefaultValueSql("NEWID()");
+                entity.Property(u => u.UserId).HasColumnName("UserId").IsRequired();
+                entity.Property(u => u.Title).HasColumnName("Title").HasMaxLength(255).IsRequired();
+                entity.Property(u => u.Content).HasColumnName("Content").IsRequired();
+                entity.Property(u => u.CreatedAt).HasColumnName("CreatedAt").HasDefaultValueSql("SYSUTCDATETIME()").IsRequired();
+                entity.Property(u => u.UpdatedAt).HasColumnName("UpdatedAt").HasDefaultValueSql("SYSUTCDATETIME()").IsRequired();
+                entity.Property(u => u.IsArchived).HasColumnName("IsArchived").HasDefaultValue(false).IsRequired();
+                entity.Property(u => u.IsPinned).HasColumnName("IsPinned").HasDefaultValue(false).IsRequired();
+                entity.Property(u => u.Style).HasColumnName("Style").HasMaxLength(255).IsRequired(false);
+
+                entity.HasOne<DbUser>()
+                      .WithMany()
+                      .HasForeignKey(u => u.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }
