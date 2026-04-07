@@ -1,11 +1,14 @@
 using Application;
 using Application.UseCases.Authentication;
+using Application.UseCases.Note;
 using Application.UseCases.User;
 using Infrastructure;
 using Infrastructure.Ef.AuditLog;
 using Infrastructure.Ef.Authentication;
+using Infrastructure.Ef.Note;
 using Infrastructure.Ef.User;
 using Infrastructure.Services;
+using Infrastructure.Services.CryptoService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +42,8 @@ builder.Host.UseSerilog((context, configuration) =>
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
 );
 
+builder.Services.Configure<EncryptionSettings>(builder.Configuration.GetSection("Encryption"));
+
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -54,8 +59,10 @@ builder.Services.AddDbContext<ManagementHubContext>(m => m.UseSqlServer(
 
 //Repository
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<INoteRepository, NoteRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<CryptoService>();
 builder.Services.AddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
 
 //Audit logging
@@ -68,6 +75,10 @@ builder.Services.AddScoped<UseCaseCreateUser>();
 builder.Services.AddScoped<UseCaseFetchUserByUsername>();
 builder.Services.AddScoped<UseCaseChangePassword>();
 builder.Services.AddScoped<UseCaseDeleteUser>();
+
+//Note
+builder.Services.AddScoped<UseCaseCreateNote>();
+builder.Services.AddScoped<UseCaseGetAllNotePinned>();
 
 //JWT configuration
 builder.Services.AddScoped<UseCaseLogin>();
