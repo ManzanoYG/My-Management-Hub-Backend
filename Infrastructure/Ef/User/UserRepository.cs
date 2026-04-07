@@ -19,10 +19,10 @@ namespace Infrastructure.Ef.User
             _passwordHasher = passwordHasher;
         }
 
-        public bool ChangePassword(string username, string oldPassword, string newPassword)
+        public bool ChangePassword(Guid userId, string oldPassword, string newPassword)
         {
-            var userToUpdate = _context.Users.FirstOrDefault(u => u.Username == username);
-            if (userToUpdate == null) throw new KeyNotFoundException($"User with username {username} has not benn found");
+            var userToUpdate = _context.Users.FirstOrDefault(u => u.Id == userId);
+            if (userToUpdate == null) throw new KeyNotFoundException($"User with id {userId} has not benn found");
 
             if (!_passwordHasher.VerifyPassword(userToUpdate.Password, oldPassword))
             {
@@ -52,14 +52,21 @@ namespace Infrastructure.Ef.User
             return user;
         }
 
-        public bool Delete(string username)
+        public bool Delete(Guid userId)
         {
-            var userToDelete = _context.Users.FirstOrDefault(u => u.Username == username);
-            if(userToDelete == null) throw new KeyNotFoundException($"User with id {username} has not been found");
+            var userToDelete = _context.Users.FirstOrDefault(u => u.Id == userId);
+            if(userToDelete == null) throw new KeyNotFoundException($"User with id {userId} has not been found");
 
             _context.Users.Remove(userToDelete);
             _context.SaveChanges();
             return true;
+        }
+
+        public DbUser FetchById(Guid id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+            if (user == null) throw new KeyNotFoundException($"User with username {id} has not been found");
+            return user;
         }
 
         public DbUser FetchByUsername(string username)

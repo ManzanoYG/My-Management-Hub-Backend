@@ -8,6 +8,7 @@ namespace Application.UseCases.User.Dto
 {
     public class DtoOutputUser
     {
+        public Guid Id { get; set; }
         public string Username { get; set; }
         public DateTime Created_at { get; set; }
         public byte UserType { get; set; }

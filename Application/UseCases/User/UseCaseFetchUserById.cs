@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 
 namespace Application.UseCases.User
 {
-    public class UseCaseFetchUserByUsername : IUseCaseParameterizeQuery<DtoOutputUser, string>
+    public class UseCaseFetchUserById : IUseCaseParameterizeQuery<DtoOutputUser, Guid>
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
 
-        public UseCaseFetchUserByUsername(IUserRepository userRepository, IMapper mapper)
+        public UseCaseFetchUserById(IMapper mapper, IUserRepository userRepository)
         {
-            _userRepository = userRepository;
             _mapper = mapper;
+            _userRepository = userRepository;
         }
 
-        public DtoOutputUser Execute(string username)
+        public DtoOutputUser Execute(Guid id)
         {
-            var dbUser = _userRepository.FetchByUsername(username);
+            var dbUser = _userRepository.FetchById(id);
             return _mapper.Map<DtoOutputUser>(dbUser);
         }
     }

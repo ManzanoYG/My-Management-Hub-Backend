@@ -72,7 +72,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 
 //User
 builder.Services.AddScoped<UseCaseCreateUser>();
-builder.Services.AddScoped<UseCaseFetchUserByUsername>();
+builder.Services.AddScoped<UseCaseFetchUserById>();
 builder.Services.AddScoped<UseCaseChangePassword>();
 builder.Services.AddScoped<UseCaseDeleteUser>();
 

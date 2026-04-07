@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Application.UseCases.User
 {
-    public class UseCaseChangePassword : IUseCaseParameterizeQuery<DtoOutputChangePassword, DtoInputChangePassword>
+    public class UseCaseChangePassword : IUseCaseParameterizeQuery<DtoOutputChangePassword, DtoInputChangePassword, Guid>
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
@@ -21,9 +21,9 @@ namespace Application.UseCases.User
             _userRepository = userRepository;
         }
 
-        public DtoOutputChangePassword Execute(DtoInputChangePassword input)
+        public DtoOutputChangePassword Execute(DtoInputChangePassword input, Guid userId)
         {
-            var dbUser = _userRepository.ChangePassword(input.Username, input.OldPassword, input.NewPassword);
+            var dbUser = _userRepository.ChangePassword(userId, input.OldPassword, input.NewPassword);
 
             return _mapper.Map<DtoOutputChangePassword>(new DtoOutputChangePassword
             {

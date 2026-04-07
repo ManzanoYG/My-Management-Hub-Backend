@@ -2,6 +2,8 @@
 using Application.UseCases.User.Dto;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace MyManagementHub_API.Controllers
 {
@@ -10,16 +12,16 @@ namespace MyManagementHub_API.Controllers
     public class UserController : ControllerBase
     {
         private readonly UseCaseCreateUser _useCaseCreateUser;
-        private readonly UseCaseFetchUserByUsername _useCaseFetchUserByUsername;
         private readonly UseCaseChangePassword _useCaseChangePassword;
         private readonly UseCaseDeleteUser _useCaseDeleteUser;
+        private readonly UseCaseFetchUserById _useCaseFetchUserById;
 
-        public UserController(UseCaseCreateUser useCaseCreateUser, UseCaseFetchUserByUsername useCaseFetchUserByUsername, UseCaseChangePassword useCaseChangePassword, UseCaseDeleteUser useCaseDeleteUser)
+        public UserController(UseCaseCreateUser useCaseCreateUser, UseCaseChangePassword useCaseChangePassword, UseCaseDeleteUser useCaseDeleteUser, UseCaseFetchUserById useCaseFetchUserById)
         {
             _useCaseCreateUser = useCaseCreateUser;
-            _useCaseFetchUserByUsername = useCaseFetchUserByUsername;
             _useCaseChangePassword = useCaseChangePassword;
             _useCaseDeleteUser = useCaseDeleteUser;
+            _useCaseFetchUserById = useCaseFetchUserById;
         }
 
         [HttpPost]
@@ -28,21 +30,21 @@ namespace MyManagementHub_API.Controllers
         {
             var output = _useCaseCreateUser.Execute(user);
             return CreatedAtAction(
-                nameof(FetchByUsername),
-                new { username = user.UserName },
+                nameof(FetchById),
+                new { id = output.Id },
                 output
             );
         }
 
         [HttpGet]
-        [Route("{username}")]
+        [Route("{id:Guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<DtoOutputUser> FetchByUsername(string username)
+        public ActionResult<DtoOutputUser> FetchById(Guid id)
         {
             try
             {
-                return Ok(_useCaseFetchUserByUsername.Execute(username));
+                return Ok(_useCaseFetchUserById.Execute(id));
             }
             catch (KeyNotFoundException e)
             {
@@ -53,28 +55,39 @@ namespace MyManagementHub_API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut]
         [Route("changePassword")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<DtoOutputChangePassword> ChangePassword([FromBody] DtoInputChangePassword changePassword)
         {
-            var output = _useCaseChangePassword.Execute(changePassword);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var parsedUserId))
+            {
+                return Unauthorized("Invalid or missing user id in token.");
+            }
+
+            var output = _useCaseChangePassword.Execute(changePassword, parsedUserId);
             if(!output.PasswordChanged)
                 return NotFound(output);
 
             return Ok(output);
         }
 
-        [HttpDelete("{username}")]
+        [Authorize]
+        [HttpDelete]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<DtoOutputDeleteUser> Delete(string username)
+        public ActionResult<DtoOutputDeleteUser> Delete()
         {
-            var result = _useCaseDeleteUser.Execute(new DtoInputDeleteUser
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var parsedUserId))
             {
-                Username = username
-            });
+                return Unauthorized("Invalid or missing user id in token.");
+            }
+
+            var result = _useCaseDeleteUser.Execute(parsedUserId);
 
             if (!result.Deleted)
                 return NotFound(result);

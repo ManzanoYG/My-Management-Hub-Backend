@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Application.UseCases.User
 {
-    public class UseCaseDeleteUser : IUseCaseParameterizeQuery<DtoOutputDeleteUser, DtoInputDeleteUser>
+    public class UseCaseDeleteUser : IUseCaseParameterizeQuery<DtoOutputDeleteUser, Guid>
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
@@ -21,9 +21,9 @@ namespace Application.UseCases.User
             _mapper = mapper;
         }
 
-        public DtoOutputDeleteUser Execute(DtoInputDeleteUser input)
+        public DtoOutputDeleteUser Execute(Guid userId)
         {
-            var dbUser = _userRepository.Delete(input.Username);
+            var dbUser = _userRepository.Delete(userId);
             return _mapper.Map<DtoOutputDeleteUser>(new DtoOutputDeleteUser
             {
                 Deleted = dbUser

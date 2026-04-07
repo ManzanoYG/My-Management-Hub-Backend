@@ -9,7 +9,6 @@ namespace Application.UseCases.User.Dto
 {
     public class DtoInputChangePassword
     {
-        [Required] public string Username { get; set; }
         [Required] public string OldPassword { get; set; }
         [Required] public string NewPassword { get; set; }
     }
